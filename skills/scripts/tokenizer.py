@@ -1,7 +1,7 @@
-from requests import Session
+from requests.cookies import RequestsCookieJar
 import json
 
-def serialize_token(session: Session, compressed: bool = False) -> str:
+def serialize_token(cookies: RequestsCookieJar, compressed: bool = False) -> str:
     """Serialize a token by replacing spaces with underscores."""
     cookies_list = [
         {
@@ -10,7 +10,7 @@ def serialize_token(session: Session, compressed: bool = False) -> str:
             "host": cookie.domain,
             "path": cookie.path,
         }
-        for cookie in session.cookies
+        for cookie in cookies
     ]
     serialized_token = json.dumps(cookies_list)
     if compressed:
@@ -22,7 +22,7 @@ def serialize_token(session: Session, compressed: bool = False) -> str:
     return serialized_token
 
 
-def deserialize_token(token: str, compressed: bool = False) -> Session:
+def deserialize_token(token: str, compressed: bool = False) -> RequestsCookieJar:
     """Deserialize a token by replacing underscores with spaces."""
     if compressed:
         # 字符串解压
@@ -31,13 +31,13 @@ def deserialize_token(token: str, compressed: bool = False) -> Session:
         token = bz2.decompress(token.encode("utf-8")).decode("utf-8")
         token = bz2.decompress(base64.urlsafe_b64decode(token.encode("utf-8"))).decode("utf-8")
     cookies_list = json.loads(token)
-    session = Session()
+    cookies = RequestsCookieJar()
     for cookie_dict in cookies_list:
-        session.cookies.set(
+        cookies.set(
             name=cookie_dict["key"],
             value=cookie_dict["value"],
             domain=cookie_dict["host"],
             path=cookie_dict["path"],
         )
-    return session
+    return cookies
     

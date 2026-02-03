@@ -1,3 +1,5 @@
+from requests import Session, cookies
+
 
 def rsa_encrypt(encrypt_exponent, modulus, plaintext):
     """
@@ -32,7 +34,7 @@ def get_config():
     }
 
 
-def sso_auth(username: str, password: str):
+def sso_auth(username: str, password: str) -> cookies.RequestsCookieJar:
     """
     登录并返回用户凭证
 
@@ -55,7 +57,6 @@ def sso_auth(username: str, password: str):
     login_success_url_prefix = config["login_success_url_prefix"]
     modify_password_url_prefix = config["modify_password_url_prefix"]
     redirect_url = ""
-    from requests import Session
 
     with Session() as session:
         with session.get(key_url) as response:
@@ -68,9 +69,7 @@ def sso_auth(username: str, password: str):
             }
         with session.get(login_url) as response:
             if response.status_code != 200:
-                raise Exception(
-                    "CAS Login Page was unavailable"
-                )
+                raise Exception("CAS Login Page was unavailable")
             # 从html中提取execution值，一个input标签，name="execution"，value="xxxx"
             html = response.text
             start_index = html.index('name="execution" value="') + len(
@@ -78,9 +77,7 @@ def sso_auth(username: str, password: str):
             )
             end_index = html.index('"', start_index)
             if not (0 < start_index < end_index):
-                raise Exception(
-                    "CAS Login Page was unavailable"
-                )
+                raise Exception("CAS Login Page was unavailable")
             execution = html[start_index:end_index]
         encrypted_password = rsa_encrypt(
             key_pair["public_exponent"], key_pair["modulus"], password
@@ -110,9 +107,7 @@ def sso_auth(username: str, password: str):
                 raise Exception("login failed")
         # 判断重定向URL
         if redirect_url.startswith(modify_password_url_prefix):
-            raise Exception(
-                username, "Please change password first."
-            )
+            raise Exception(username, "Please change password first.")
         elif not redirect_url.startswith(login_success_url_prefix):
             raise Exception("ticket URL not found")
         # 访问ticket_url，完成登录
@@ -120,11 +115,9 @@ def sso_auth(username: str, password: str):
             redirect_url,
         ) as response:
             if response.status_code == 200:
-                import tokenizer
-                return tokenizer.serialize_token(session, compressed=True)
+                return session.cookies
             else:
                 raise Exception("login failed")
-
 
 
 if __name__ == "__main__":
@@ -141,5 +134,7 @@ if __name__ == "__main__":
     username = args.username
     password = args.password
     token = sso_auth(username, password)
+    import tokenizer
+    token = tokenizer.serialize_token(token, compressed=True)
     print("Login successful. Token:")
     print(token)
