@@ -28,8 +28,8 @@ def deserialize_token(token: str, compressed: bool = False) -> RequestsCookieJar
         # 字符串解压
         import bz2
         import base64
-        token = bz2.decompress(token.encode("utf-8")).decode("utf-8")
-        token = bz2.decompress(base64.urlsafe_b64decode(token.encode("utf-8"))).decode("utf-8")
+        token = base64.urlsafe_b64decode(token.encode("utf-8"))
+        token = bz2.decompress(token).decode("utf-8")
     cookies_list = json.loads(token)
     cookies = RequestsCookieJar()
     for cookie_dict in cookies_list:

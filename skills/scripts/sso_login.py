@@ -130,11 +130,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--password", type=str, required=True, help="Password for SSO login"
     )
+    parser.add_argument(
+        "--compressed", action="store_true", help="Whether to use compressed token"
+    )
     args = parser.parse_args()
     username = args.username
     password = args.password
+    compressed = args.compressed
     token = sso_auth(username, password)
     import tokenizer
-    token = tokenizer.serialize_token(token, compressed=True)
-    print("Login successful. Token:")
+    token = tokenizer.serialize_token(token, compressed=compressed)
     print(token)

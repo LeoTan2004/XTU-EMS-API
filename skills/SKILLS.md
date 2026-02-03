@@ -18,5 +18,15 @@ description: XiangTan University API, You can use these skills to access various
 可以执行下面的命令进行登录，登录成功后会在控制台中打印 token 信息：
 
 ```bash
-python scripts/sso_login.py --username your_username --password your_password
+python scripts/sso_login.py --username your_username --password your_password --compressed
+```
+
+### 通过SSO Token 获取教务系统授权
+
+可以使用统一身份认证系统获取的 token 来访问教务系统。需要将 token 放入请求头中进行身份验证。
+
+可以执行下面的命令进行登录，登录成功后会在控制台中打印教务系统的 cookies 信息：
+
+```bash
+python scripts/ems_auth.py --sso-token your_sso_token --compressed
 ```
