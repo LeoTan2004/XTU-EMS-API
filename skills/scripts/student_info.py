@@ -88,4 +88,5 @@ if __name__ == "__main__":
 
     input_cookies = deserialize_token(input_token, compressed=compressed)
     student_info = ems_get_info(input_cookies)
-    print(student_info)
+    import json
+    print(json.dumps(student_info, ensure_ascii=False, indent=4))

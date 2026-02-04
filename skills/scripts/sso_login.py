@@ -1,17 +1,15 @@
 from requests import Session, cookies
 
 
-def rsa_encrypt(encrypt_exponent, modulus, plaintext):
+def rsa_encrypt(encrypt_exponent: int, modulus: int, plaintext: str) -> str:
     """
     使用RSA加密算法对明文进行加密。
 
-    参数:
-    encrypt_exponent (int): 公钥指数 e
-    modulus (int): 模数 n
-    plaintext (str): 明文字符串
+    :param encrypt_exponent: 公钥指数 e
+    :param modulus: 模数 n
+    :param plaintext: 明文字符串
 
-    返回:
-    str: 加密后的密文（以十六进制字符串形式返回）
+    :return: 加密后的密文（以十六进制字符串形式返回）
     """
     # 将明文字符串转换为整数
     message_int = int.from_bytes(plaintext.encode("utf-8"), "big")

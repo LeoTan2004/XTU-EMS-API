@@ -55,3 +55,23 @@ python scripts/student_info.py --token your_token --compressed
     "college": "计算机学院●网络空间安全学院"
 }
 ```
+
+## 获取教学日历
+
+可以使用教务系统的 cookies 来获取教学日历信息。
+
+主要包括学期开始时间、结束时间。
+可以执行下面的命令获取教学日历信息：
+
+```bash
+python scripts/teaching_calendar.py --token your_token --compressed
+```
+获取的信息会以 JSON 格式打印在控制台中。
+
+```json
+{
+    "term_id": "2025-2026-1",
+    "start_date": "2025-09-01",
+    "end_date": "2026-01-18"
+}
+```
