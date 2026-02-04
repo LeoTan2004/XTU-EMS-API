@@ -54,7 +54,6 @@ python scripts/ems_auth.py --token your_token --compressed
 python scripts/student_info.py --token your_token --compressed
 ```
 
-
 参数说明：
 | 参数名 | 说明 | 类型 | 必填 | 示例值 |
 | ------------ | ------------ | ------ | ---- | ------------- |
@@ -75,7 +74,6 @@ python scripts/student_info.py --token your_token --compressed
   "college": "计算机学院●网络空间安全学院"
 }
 ```
-
 
 ## 获取教学日历
 
@@ -104,8 +102,6 @@ python scripts/teaching_calendar.py --token your_token --compressed
 }
 ```
 
-
-
 ## 获取教室空满情况
 
 可以使用教务系统的 cookies 来获取教室空满情况。
@@ -115,7 +111,6 @@ python scripts/teaching_calendar.py --token your_token --compressed
 ```bash
 python scripts/classroom_availability.py --token your_token --compressed --year 2025 --term 1 --weeks 1 2 3 --day-of-week 1 --sections 1 2 3
 ```
-
 
 参数说明：
 | 参数名 | 说明 | 类型 | 必填 | 示例值 |
@@ -132,7 +127,6 @@ python scripts/classroom_availability.py --token your_token --compressed --year 
 ["化工原理楼-北106", "一教楼-102", "一教楼-114"]
 ```
 
-
 ## 获取考试安排
 
 可以使用教务系统的 cookies 来获取考试安排。
@@ -142,7 +136,6 @@ python scripts/classroom_availability.py --token your_token --compressed --year 
 ```bash
 python scripts/exam_schedule.py --token your_token --compressed --year 2025 --term 1
 ```
-
 
 参数说明：
 | 参数名 | 说明 | 类型 | 必填 | 示例值 |
@@ -166,7 +159,6 @@ python scripts/exam_schedule.py --token your_token --compressed --year 2025 --te
 ]
 ```
 
-
 ## 获取课表信息
 
 可以使用教务系统的 cookies 来获取课表信息。
@@ -185,7 +177,6 @@ python scripts/course_schedule.py --token your_token --compressed --year 2025 --
 | --year | 学年 | 整数 | 否（默认为当前学年） | 2025 |
 | --term | 学期 | 整数 | 否（默认为当前学期） | 1 |
 
-
 获取的信息会以 JSON 格式打印在控制台中。
 
 ```json
@@ -199,4 +190,55 @@ python scripts/course_schedule.py --token your_token --compressed --year 2025 --
     "sections": [1, 2]
   }
 ]
+```
+
+## 获取成绩信息
+
+> 该功能底层目前通过解析成绩单PDF实现，可以绕过评教环节直接获取成绩信息。但是需要安装额外的依赖库 `pdfplumber`，请确保已经安装该依赖库。
+
+可以使用教务系统的 cookies 来获取成绩信息。
+
+可以执行下面的命令获取成绩信息：
+
+```bash
+python scripts/transcript.py --token your_token --compressed
+```
+
+参数说明：
+| 参数名 | 说明 | 类型 | 必填 | 示例值 |
+| ---------- | ------------ | ------ | ---- | ------------- |
+| --token | 教务系统 cookies | 字符串 | 是 | your_token |
+| --compressed | 是否启用压缩 | 布尔 | 否 | |
+
+获取的信息会以 JSON 格式打印在控制台中。
+
+```json
+{
+  "college": "计算机学院",
+  "major": "通信工程(00837)",
+  "student_id": "202205561111",
+  "name": "张三",
+  "scores": [
+    {
+      "name": "创新创业基础1",
+      "type": "必修",
+      "credit": "1",
+      "score": "84",
+      "term": 1
+    },
+    {
+      "name": "大学英语(1)",
+      "type": "必修",
+      "credit": "3",
+      "score": "88",
+      "term": 1
+    }
+  ],
+  "average_score": "75.55",
+  "gpa": "2.44",
+  "total_credit": ["169", "156.0"],
+  "compulsory_credit": ["142", "127.0"],
+  "elective_credit": ["14", "16.0"],
+  "cross_course_credit": ["13", "13.0"]
+}
 ```
