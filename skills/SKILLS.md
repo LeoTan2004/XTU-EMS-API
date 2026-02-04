@@ -54,6 +54,13 @@ python scripts/ems_auth.py --token your_token --compressed
 python scripts/student_info.py --token your_token --compressed
 ```
 
+
+参数说明：
+| 参数名 | 说明 | 类型 | 必填 | 示例值 |
+| ------------ | ------------ | ------ | ---- | ------------- |
+| --token | 教务系统 cookies | 字符串 | 是 | your_token |
+| --compressed | 是否启用压缩 | 布尔 | 否 | |
+
 获取的信息会以 JSON 格式打印在控制台中。
 
 ```json
@@ -69,11 +76,6 @@ python scripts/student_info.py --token your_token --compressed
 }
 ```
 
-参数说明：
-| 参数名 | 说明 | 类型 | 必填 | 示例值 |
-| ------------ | ------------ | ------ | ---- | ------------- |
-| --token | 教务系统 cookies | 字符串 | 是 | your_token |
-| --compressed | 是否启用压缩 | 布尔 | 否 | |
 
 ## 获取教学日历
 
@@ -86,6 +88,12 @@ python scripts/student_info.py --token your_token --compressed
 python scripts/teaching_calendar.py --token your_token --compressed
 ```
 
+参数说明：
+| 参数名 | 说明 | 类型 | 必填 | 示例值 |
+| ------------ | ------------ | ------ | ---- | ------------- |
+| --token | 教务系统 cookies | 字符串 | 是 | your_token |
+| --compressed | 是否启用压缩 | 布尔 | 否 | |
+
 获取的信息会以 JSON 格式打印在控制台中。
 
 ```json
@@ -96,11 +104,7 @@ python scripts/teaching_calendar.py --token your_token --compressed
 }
 ```
 
-参数说明：
-| 参数名 | 说明 | 类型 | 必填 | 示例值 |
-| ------------ | ------------ | ------ | ---- | ------------- |
-| --token | 教务系统 cookies | 字符串 | 是 | your_token |
-| --compressed | 是否启用压缩 | 布尔 | 否 | |
+
 
 ## 获取教室空满情况
 
@@ -112,11 +116,6 @@ python scripts/teaching_calendar.py --token your_token --compressed
 python scripts/classroom_availability.py --token your_token --compressed --year 2025 --term 1 --weeks 1 2 3 --day-of-week 1 --sections 1 2 3
 ```
 
-获取的信息会以 JSON 格式打印在控制台中。
-
-```json
-["化工原理楼-北106", "一教楼-102", "一教楼-114"]
-```
 
 参数说明：
 | 参数名 | 说明 | 类型 | 必填 | 示例值 |
@@ -127,6 +126,13 @@ python scripts/classroom_availability.py --token your_token --compressed --year 
 | --day-of-week | 星期几 | 整数 | 是 | 1 |
 | --sections | 节次列表 | 整数列表 | 是 | 1 2 3 |
 
+获取的信息会以 JSON 格式打印在控制台中。
+
+```json
+["化工原理楼-北106", "一教楼-102", "一教楼-114"]
+```
+
+
 ## 获取考试安排
 
 可以使用教务系统的 cookies 来获取考试安排。
@@ -136,6 +142,15 @@ python scripts/classroom_availability.py --token your_token --compressed --year 
 ```bash
 python scripts/exam_schedule.py --token your_token --compressed --year 2025 --term 1
 ```
+
+
+参数说明：
+| 参数名 | 说明 | 类型 | 必填 | 示例值 |
+| ------------ | ------------ | ------ | ---- | ------------- |
+| --token | 教务系统 cookies | 字符串 | 是 | your_token |
+| --compressed | 是否启用压缩 | 布尔 | 否 | |
+| --year | 学年 | 整数 | 否（默认为当前学年） | 2025 |
+| --term | 学期 | 整数 | 否（默认为当前学期） | 1 |
 
 获取的信息会以 JSON 格式打印在控制台中。
 
@@ -151,6 +166,17 @@ python scripts/exam_schedule.py --token your_token --compressed --year 2025 --te
 ]
 ```
 
+
+## 获取课表信息
+
+可以使用教务系统的 cookies 来获取课表信息。
+
+可以执行下面的命令获取课表信息：
+
+```bash
+python scripts/course_schedule.py --token your_token --compressed --year 2025 --term 1
+```
+
 参数说明：
 | 参数名 | 说明 | 类型 | 必填 | 示例值 |
 | ------------ | ------------ | ------ | ---- | ------------- |
@@ -158,3 +184,19 @@ python scripts/exam_schedule.py --token your_token --compressed --year 2025 --te
 | --compressed | 是否启用压缩 | 布尔 | 否 | |
 | --year | 学年 | 整数 | 否（默认为当前学年） | 2025 |
 | --term | 学期 | 整数 | 否（默认为当前学期） | 1 |
+
+
+获取的信息会以 JSON 格式打印在控制台中。
+
+```json
+[
+  {
+    "name": "形势与政策7",
+    "teacher": "许善品",
+    "location": "未排地点",
+    "weeks": [2, 3],
+    "day_of_week": 5,
+    "sections": [1, 2]
+  }
+]
+```
