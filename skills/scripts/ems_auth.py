@@ -1,17 +1,17 @@
 from requests import Session, cookies
 
-homepage_url_prefix = "https://jw.xtu.edu.cn:443/jwglxt/xtgl/index_initMenu.html"
-
-def ems_auth_with_sso(cookies: cookies.RequestsCookieJar) -> cookies.RequestsCookieJar:
+def ems_auth_with_sso(cookie_jar: cookies.RequestsCookieJar) -> cookies.RequestsCookieJar:
     """
     使用SSO登录获取EMS系统的用户凭证。
 
-    :param cookies: 包含用户凭证的CookieJar对象
+    :param cookie_jar: 包含用户凭证的CookieJar对象
     :return: 包含EMS系统登录后cookies的CookieJar对象
 
     """
+    homepage_url_prefix = "https://jw.xtu.edu.cn:443/jwglxt/xtgl/index_initMenu.html"
+
     with Session() as session:
-        session.cookies = cookies
+        session.cookies = cookie_jar
         auth_url = "https://jw.xtu.edu.cn/sso/zfiotlogin"
         response = session.get(auth_url)
         final_url = response.url
@@ -26,10 +26,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="EMS SSO Authentication Script")
     parser.add_argument(
-        "--sso-token",
+        "--token",
         type=str,
         required=True,
-        help="Serialized token for SSO authentication",
+        help="Serialized token which must contain SSO authentication cookies",
     )
     parser.add_argument(
         "--compressed",
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         help="Whether the input token is compressed",
     )
     args = parser.parse_args()
-    input_token = args.sso_token
+    input_token = args.token
     compressed = args.compressed
 
     input_cookies = deserialize_token(input_token, compressed=compressed)

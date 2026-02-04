@@ -28,5 +28,30 @@ python scripts/sso_login.py --username your_username --password your_password --
 可以执行下面的命令进行登录，登录成功后会在控制台中打印教务系统的 cookies 信息：
 
 ```bash
-python scripts/ems_auth.py --sso-token your_sso_token --compressed
+python scripts/ems_auth.py --token your_token --compressed
+```
+
+## 获取个人信息
+
+可以使用教务系统的 cookies 来获取个人信息。
+
+可以执行下面的命令获取个人信息：
+
+```bash
+python scripts/student_info.py --token your_token --compressed
+```
+
+获取的信息会以 JSON 格式打印在控制台中。
+
+```json
+{
+    "student_id": "202205561111", 
+    "name": "张三", 
+    "gender": "男", 
+    "birthday": "2004-01-01", 
+    "entrance_day": "2022-09-01", 
+    "major": "通信工程(00837)", 
+    "class": "2022通信工程3班", 
+    "college": "计算机学院●网络空间安全学院"
+}
 ```
