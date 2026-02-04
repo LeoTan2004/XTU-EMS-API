@@ -6,7 +6,14 @@ from tokenizer import deserialize_token
 
 
 def parse_weeks(weeks_str: str) -> list:
-    """将教务系统的周次描述解析为周次整数列表。"""
+    """
+    将 EMS 返回的周次字符串解析为按升序排列的周次整数列表。
+
+    :param weeks_str: 教务系统中的周次描述，例如 "1-16周"、"3-15(单)"。
+    :type weeks_str: str
+    :return: 去重后的周次整数集合，使用升序列表表示。
+    :rtype: list
+    """
     if not weeks_str:
         return []
     normalized = weeks_str.replace("周", "").replace("，", ",")
@@ -44,7 +51,14 @@ def parse_weeks(weeks_str: str) -> list:
 
 
 def parse_sections(section_str: str) -> list:
-    """将节次描述转换为节次整数列表。"""
+    """
+    将课节描述字符串转换为节次整数列表，支持单节或区间格式。
+
+    :param section_str: 原始节次描述，例如 "第1-2节"、"第5节"。
+    :type section_str: str
+    :return: 对应的节次整数列表，按升序排列。
+    :rtype: list
+    """
     if not section_str:
         return []
     cleaned = section_str.replace("节", "").replace("第", "")
@@ -69,7 +83,14 @@ def parse_sections(section_str: str) -> list:
 
 
 def parse_courses_list(courses_list) -> list:
-    """解析课程列表为结构化的课程字典列表。"""
+    """
+    将 EMS 接口返回的课程列表转为结构化且字段规范的课程字典列表。
+
+    :param courses_list: EMS 接口返回的原始课程数据列表。
+    :type courses_list: list | None
+    :return: 每门课程的结构化信息列表，包含课程名称、教师、场地等字段。
+    :rtype: list
+    """
     courses = []
     for course in courses_list or []:
         name = course.get("kcmc", "").strip()
@@ -96,17 +117,38 @@ def parse_courses_list(courses_list) -> list:
 
 
 def get_term_year(d: date) -> int:
-    """根据日期推断学年起始年份。"""
+    """
+    根据指定日期推算所属学年的起始年份，8 月前视为上一学年。
+
+    :param d: 用于推算的日期对象。
+    :type d: date
+    :return: 学年起始年份整数值。
+    :rtype: int
+    """
     return d.year - 1 if d.month < 8 else d.year
 
 
 def get_term_id(d: date) -> int:
-    """根据日期推断学期，第一学期返回3，第二学期返回12。"""
+    """
+    根据指定日期推断当前学期，返回 EMS 使用的学期编码。
+
+    :param d: 用于推算的日期对象。
+    :type d: date
+    :return: 学期编码，第一学期返回 3，第二学期返回 12。
+    :rtype: int
+    """
     return 12 if 2 <= d.month <= 7 else 3
 
 
 def normalize_term(term: int) -> int:
-    """接受用户输入的学期编号，必要时转换为教务系统使用的编码。"""
+    """
+    将用户输入的学期编号转换为 EMS 接口使用的学期编码。
+
+    :param term: 学期编号，可为逻辑编号 1/2 或 EMS 编码 3/12。
+    :type term: int
+    :return: 与 EMS 接口兼容的学期编码。
+    :rtype: int
+    """
     if term == 1:
         return 3
     if term == 2:

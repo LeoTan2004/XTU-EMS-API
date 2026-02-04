@@ -3,13 +3,16 @@ from requests import Session, cookies
 
 def rsa_encrypt(encrypt_exponent: int, modulus: int, plaintext: str) -> str:
     """
-    使用RSA加密算法对明文进行加密。
+    使用 RSA 公钥加密算法对明文进行加密并返回十六进制密文。
 
-    :param encrypt_exponent: 公钥指数 e
-    :param modulus: 模数 n
-    :param plaintext: 明文字符串
-
-    :return: 加密后的密文（以十六进制字符串形式返回）
+    :param encrypt_exponent: RSA 公钥指数 e。
+    :type encrypt_exponent: int
+    :param modulus: RSA 模数 n，来自服务端发布的公钥。
+    :type modulus: int
+    :param plaintext: 待加密的明文字符串。
+    :type plaintext: str
+    :return: 加密后的密文，使用十六进制字符串表示。
+    :rtype: str
     """
     # 将明文字符串转换为整数
     message_int = int.from_bytes(plaintext.encode("utf-8"), "big")
@@ -24,6 +27,13 @@ def rsa_encrypt(encrypt_exponent: int, modulus: int, plaintext: str) -> str:
 
 
 def get_config():
+    """
+    提供门户 SSO 登录流程所需的固定配置项。
+
+    :return: 包含登录入口、RSA 公钥接口及后续跳转地址前缀的配置字典。
+    :rtype: dict
+    """
+
     return {
         "login_url": "https://portal2020.xtu.edu.cn/cas/login?service=https%3A%2F%2Fportal2020.xtu.edu.cn%2Fapplication-center",
         "key_url": "https://portal2020.xtu.edu.cn/cas/v2/getPubKey",
@@ -34,20 +44,15 @@ def get_config():
 
 def sso_auth(username: str, password: str) -> cookies.RequestsCookieJar:
     """
-    登录并返回用户凭证
+    执行门户 SSO 登录流程并返回登录成功后的 Cookie 集合。
 
-    一共有四次请求：
-
-    获取RSA公钥 --> 获取execution值 --> 提交登录表单，获取ticket_url --> 访问ticket_url
-
-    :param username: 用户名
-    :param password: 密码
-    :return: 包含登录后cookies的CookieJar对象
-
-    :raises ServiceUnavailableException: 当服务不可用时抛出, 如无法获取RSA公钥或登录页面
-    :raises InvalidUsernameOrPasswordException: 当用户名或密码无效时抛出
-    :raises AccountDisabledException: 当账号被禁用时抛出
-
+    :param username: 学号或工号形式的 SSO 用户名。
+    :type username: str
+    :param password: 用户密码，在提交前会通过 RSA 加密。
+    :type password: str
+    :return: 登录成功后从会话中提取的 Cookie 集合。
+    :rtype: cookies.RequestsCookieJar
+    :raises Exception: 当 RSA 公钥、登录页面或重定向地址异常时抛出具体异常信息。
     """
     config = get_config()
     login_url = config["login_url"]

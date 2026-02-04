@@ -3,11 +3,12 @@ from requests import Session, cookies
 
 def parse_student_info(html: str) -> dict:
     """
-    解析学生信息页面的HTML内容，提取学生信息。
+    解析 EMS 学生信息页面的 HTML 内容并提取结构化的学生信息字段。
 
-    :param html: 学生信息页面的HTML内容
-    :return: 包含学生信息的字典
-
+    :param html: 从学生信息页面获取的完整 HTML 文本。
+    :type html: str
+    :return: 学生基本信息与学籍信息的字典表示。
+    :rtype: dict
     """
     from bs4 import BeautifulSoup
 
@@ -16,8 +17,14 @@ def parse_student_info(html: str) -> dict:
 
     def _safe_get_text(panel, element_id: str) -> str:
         """
-        Safely get stripped text from a child element by id.
-        Returns an empty string if the panel or element is missing.
+        安全地从指定元素中提取文本内容，缺失时返回空字符串。
+
+        :param panel: 当前查找范围内的父级节点。
+        :type panel: bs4.element.Tag | None
+        :param element_id: 需要查找的元素 id。
+        :type element_id: str
+        :return: 对应元素的去除空白后的文本内容。
+        :rtype: str
         """
         if panel is None:
             return ""
@@ -47,11 +54,13 @@ def parse_student_info(html: str) -> dict:
 
 def ems_get_info(cookie_jar: cookies.RequestsCookieJar) -> dict:
     """
-    使用EMS系统的用户凭证获取学生信息。
+    使用 EMS 系统的用户凭证检索学生个人信息页面并解析核心字段。
 
-    :param cookie_jar: 包含EMS系统登录后cookies的CookieJar对象
-    :return: 包含学生信息的字典
-
+    :param cookie_jar: 已登录 EMS 系统的会话 Cookie 集合，用于认证请求。
+    :type cookie_jar: cookies.RequestsCookieJar
+    :return: 包含学生基本信息与学籍信息的字典。
+    :rtype: dict
+    :raises Exception: 当请求过程中遇到非 2xx 状态码时抛出。
     """
     info_url = "https://jw.xtu.edu.cn/jwglxt/xsxxxggl/xsgrxxwh_cxXsgrxx.html?gnmkdm=N100801&layout=default"
 

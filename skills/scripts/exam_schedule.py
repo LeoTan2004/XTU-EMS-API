@@ -6,10 +6,12 @@ from tokenizer import deserialize_token
 import json
 def parse_exams_list(exams_list) -> list:
     """
-    解析考试信息列表
+    将 EMS 返回的考试安排列表解析为结构化的考试信息字典列表。
 
-    :param exams_list: 原始考试列表
-    :return: 解析后的考试信息字典列表
+    :param exams_list: 原始考试记录列表，来源于 EMS 接口的 items 字段。
+    :type exams_list: list | None
+    :return: 每场考试的结构化信息，包括名称、时间、地点和类型。
+    :rtype: list
     """
     exams = []
     for exam in exams_list:
@@ -38,16 +40,12 @@ def parse_exams_list(exams_list) -> list:
 
 def get_term_year(d: date) -> int:
     """
-    获取当前学年
+    根据日期推断所属学年，8 月之前归属于上一学年，8 月及以后归属当年。
 
-    学年从每年的8月开始，到次年的7月结束
-    例如：
-    - 2023年8月到2024年7月是2023-2024学年
-    - 2024年8月到2025年7月是2024-2025学年
-
-    :param d: 日期时间对象
-    :return: 学年开始的年份
-    例如，2023-2024学年返回2023
+    :param d: 需要判断学年的日期对象。
+    :type d: date
+    :return: 学年起始年份整数，例 2023 表示 2023-2024 学年。
+    :rtype: int
     """
     year = d.year
     month = d.month
@@ -59,27 +57,28 @@ def get_term_year(d: date) -> int:
 
 def get_term_id(d: date) -> int:
     """
-    获取当前学期
+    根据日期判断当前学期编号，2-7 月视为第二学期，其余月份视为第一学期。
 
-    学期分为两个：
-    - 第1学期：8月到次年1月
-    - 第2学期：2月到7月
-
-    :param d: 日期时间对象
-    :return: 学期编号，1或2
-
+    :param d: 需要判断学期的日期对象。
+    :type d: date
+    :return: 学期编号，1 表示第一学期，2 表示第二学期。
+    :rtype: int
     """
     month = d.month
     return 2 if 2 <= month <= 7 else 1
 
 def ems_get_exam_schedule(cookie_jar: cookies.RequestsCookieJar, year=None, term=None) -> list:
     """
-    使用EMS系统的用户凭证获取考试安排信息。
+    使用 EMS 系统的用户凭证查询指定学年学期的考试安排信息。
 
-    :param cookie_jar: 包含EMS系统登录后cookies的CookieJar对象
-    :param year: 学年
-    :param term: 学期
-    :return: 考试安排信息字典列表
+    :param cookie_jar: 已登录 EMS 系统的会话 Cookie 集合，用于接口认证。
+    :type cookie_jar: cookies.RequestsCookieJar
+    :param year: 学年起始年份，为 None 时自动根据当前日期推断。
+    :type year: int | None
+    :param term: 学期编号，1 表示第一学期，2 表示第二学期，为 None 时自动推断。
+    :type term: int | None
+    :return: 结构化的考试安排信息列表。
+    :rtype: list
     """
     exams_url = "https://jw.xtu.edu.cn/jwglxt/kwgl/kscx_cxXsksxxIndex.html?doType=query&gnmkdm=N358105"
     date = datetime.now().date()

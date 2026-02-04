@@ -2,10 +2,13 @@ from requests import Session, cookies
 
 def parse_calendar_info(response_text: str) -> dict:
     """
-    解析教务系统返回的日历信息。
+    解析 EMS 教务系统返回的日历 HTML 内容并提取学期起止日期等信息。
 
-    :param response_text: 教务系统返回的日历信息文本
-    :return: 学期日历信息的字典对象，包括学期开始和结束日期等
+    :param response_text: 日历页面的 HTML 文本内容。
+    :type response_text: str
+    :return: 包含学期标识、开始日期与结束日期的字典。
+    :rtype: dict
+    :raises ValueError: 当页面结构不符合预期时抛出，用于提示解析失败。
     """
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(response_text, "html.parser")
@@ -29,9 +32,13 @@ def parse_calendar_info(response_text: str) -> dict:
 
 def ems_get_calendar(cookie_jar: cookies.RequestsCookieJar) -> dict:
     """
-    从教务系统获取学期的日历信息。
-    :param cookie_jar: 包含EMS系统登录后cookies的CookieJar对象
-    :return: 学期日历信息的字典对象，包括学期开始和结束日期等
+    使用 EMS 系统的用户凭证获取学期教学日历并返回关键日期信息。
+
+    :param cookie_jar: 已登录 EMS 系统的会话 Cookie 集合，用于访问日历页面。
+    :type cookie_jar: cookies.RequestsCookieJar
+    :return: 学期日历信息字典，包括学期标识、开始日期和结束日期。
+    :rtype: dict
+    :raises Exception: 当接口请求失败且返回非 200 状态码时抛出。
     """
     calendar_url = "https://jw.xtu.edu.cn/jwglxt/xtgl/index_cxAreaFive.html?localeKey=zh_CN&gnmkdm=index"
     with Session() as session:

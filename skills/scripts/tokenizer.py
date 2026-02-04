@@ -2,7 +2,16 @@ from requests.cookies import RequestsCookieJar
 import json
 
 def serialize_token(cookies: RequestsCookieJar, compressed: bool = False) -> str:
-    """Serialize a token by replacing spaces with underscores."""
+    """
+    将 Cookie 集合序列化为 JSON 字符串，可选地进行压缩编码。
+
+    :param cookies: 需要序列化的 Cookie 集合。
+    :type cookies: RequestsCookieJar
+    :param compressed: 指示是否对序列化结果执行压缩编码。
+    :type compressed: bool
+    :return: 序列化后的令牌字符串，若压缩则为 Base64 编码。
+    :rtype: str
+    """
     cookies_list = [
         {
             "key": cookie.name,
@@ -23,7 +32,16 @@ def serialize_token(cookies: RequestsCookieJar, compressed: bool = False) -> str
 
 
 def deserialize_token(token: str, compressed: bool = False) -> RequestsCookieJar:
-    """Deserialize a token by replacing underscores with spaces."""
+    """
+    将序列化令牌解析回 Cookie 集合，支持自动解压缩。
+
+    :param token: 通过 serialize_token 生成的令牌字符串。
+    :type token: str
+    :param compressed: 指示令牌是否经过压缩编码。
+    :type compressed: bool
+    :return: 还原后的 Cookie 集合，可直接用于请求会话。
+    :rtype: RequestsCookieJar
+    """
     if compressed:
         # 字符串解压
         import bz2

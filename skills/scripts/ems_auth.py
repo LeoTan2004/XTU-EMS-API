@@ -2,11 +2,13 @@ from requests import Session, cookies
 
 def ems_auth_with_sso(cookie_jar: cookies.RequestsCookieJar) -> cookies.RequestsCookieJar:
     """
-    使用SSO登录获取EMS系统的用户凭证。
+    使用现有 SSO 登录态换取 EMS 系统的会话 Cookie 集合。
 
-    :param cookie_jar: 包含用户凭证的CookieJar对象
-    :return: 包含EMS系统登录后cookies的CookieJar对象
-
+    :param cookie_jar: 已完成 SSO 认证的 Cookie 集合，用于继续访问 EMS。
+    :type cookie_jar: cookies.RequestsCookieJar
+    :return: EMS 系统登录后的 Cookie 集合，可用于后续接口请求。
+    :rtype: cookies.RequestsCookieJar
+    :raises Exception: 当最终跳转地址未进入 EMS 首页时抛出，用于提示认证失败。
     """
     homepage_url_prefix = "https://jw.xtu.edu.cn:443/jwglxt/xtgl/index_initMenu.html"
 
