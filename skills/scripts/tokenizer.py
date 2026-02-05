@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from requests.cookies import RequestsCookieJar
 import json
+
 
 def serialize_token(cookies: RequestsCookieJar, compressed: bool = False) -> str:
     """
@@ -23,9 +26,9 @@ def serialize_token(cookies: RequestsCookieJar, compressed: bool = False) -> str
     ]
     serialized_token = json.dumps(cookies_list)
     if compressed:
-        # 字符串压缩
-        import bz2
         import base64
+        import bz2
+
         serialized_token = bz2.compress(serialized_token.encode("utf-8"))
         serialized_token = base64.urlsafe_b64encode(serialized_token).decode("utf-8")
     return serialized_token
@@ -43,9 +46,9 @@ def deserialize_token(token: str, compressed: bool = False) -> RequestsCookieJar
     :rtype: RequestsCookieJar
     """
     if compressed:
-        # 字符串解压
-        import bz2
         import base64
+        import bz2
+
         token = base64.urlsafe_b64decode(token.encode("utf-8"))
         token = bz2.decompress(token).decode("utf-8")
     cookies_list = json.loads(token)
@@ -58,4 +61,3 @@ def deserialize_token(token: str, compressed: bool = False) -> RequestsCookieJar
             path=cookie_dict["path"],
         )
     return cookies
-    

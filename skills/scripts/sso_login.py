@@ -1,5 +1,14 @@
+from __future__ import annotations
+
+import argparse
+from typing import Iterable
+
 from requests import Session, cookies
 
+try:
+    from .tokenizer import serialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import serialize_token
 
 def rsa_encrypt(encrypt_exponent: int, modulus: int, plaintext: str) -> str:
     """
@@ -14,19 +23,13 @@ def rsa_encrypt(encrypt_exponent: int, modulus: int, plaintext: str) -> str:
     :return: 加密后的密文，使用十六进制字符串表示。
     :rtype: str
     """
-    # 将明文字符串转换为整数
     message_int = int.from_bytes(plaintext.encode("utf-8"), "big")
-
-    # 计算密文 c = m^e mod n
     ciphertext_int = pow(message_int, encrypt_exponent, modulus)
-
-    # 将密文整数转换为十六进制字符串
-    ciphertext_hex = hex(ciphertext_int)[2:]  # 去掉前缀'0x'
-
+    ciphertext_hex = hex(ciphertext_int)[2:]
     return ciphertext_hex
 
 
-def get_config():
+def get_config() -> dict[str, str]:
     """
     提供门户 SSO 登录流程所需的固定配置项。
 
@@ -73,7 +76,6 @@ def sso_auth(username: str, password: str) -> cookies.RequestsCookieJar:
         with session.get(login_url) as response:
             if response.status_code != 200:
                 raise Exception("CAS Login Page was unavailable")
-            # 从html中提取execution值，一个input标签，name="execution"，value="xxxx"
             html = response.text
             start_index = html.index('name="execution" value="') + len(
                 'name="execution" value="'
@@ -93,7 +95,6 @@ def sso_auth(username: str, password: str) -> cookies.RequestsCookieJar:
             "authcode": "",
             "mobileCode": "",
         }
-        # 执行登录请求
         with session.post(
             login_url,
             data=payload,
@@ -106,26 +107,20 @@ def sso_auth(username: str, password: str) -> cookies.RequestsCookieJar:
             elif response.status_code == 403:
                 raise Exception("Account disabled")
             else:
-
                 raise Exception("login failed")
-        # 判断重定向URL
         if redirect_url.startswith(modify_password_url_prefix):
             raise Exception(username, "Please change password first.")
         elif not redirect_url.startswith(login_success_url_prefix):
             raise Exception("ticket URL not found")
-        # 访问ticket_url，完成登录
         with session.get(
             redirect_url,
         ) as response:
             if response.status_code == 200:
                 return session.cookies
-            else:
-                raise Exception("login failed")
+            raise Exception("login failed")
 
 
-if __name__ == "__main__":
-    import argparse
-
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="SSO Login Script")
     parser.add_argument(
         "--username", type=str, required=True, help="Username for SSO login"
@@ -136,11 +131,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--compressed", action="store_true", help="Whether to use compressed token"
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     username = args.username
     password = args.password
     compressed = args.compressed
     token = sso_auth(username, password)
-    import tokenizer
-    token = tokenizer.serialize_token(token, compressed=compressed)
-    print(token)
+    token_str = serialize_token(token, compressed=compressed)
+    print(token_str)
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

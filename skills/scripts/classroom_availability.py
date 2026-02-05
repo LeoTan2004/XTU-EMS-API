@@ -1,5 +1,14 @@
+from __future__ import annotations
+
+import argparse
+from typing import Iterable
+
 from requests import Session, cookies
 
+try:
+    from .tokenizer import deserialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token
 
 class ClassroomQueryData(dict):
     """
@@ -21,30 +30,13 @@ class ClassroomQueryData(dict):
 
     def __init__(
         self,
-        year,
-        term,
+        year: int,
+        term: int,
         weeks: list[int],
         day_of_week: int,
         sections: list[int],
-        time=0,
-    ):
-        """
-        初始化教室查询参数，并保存为实例属性以便构建查询字符串。
-
-        :param year: 学年起始年份，示例 2025 表示 2025-2026 学年。
-        :type year: int
-        :param term: 学期编号，1 为第一学期，2 为第二学期。
-        :type term: int
-        :param weeks: 需要查询的周次列表。
-        :type weeks: list[int]
-        :param day_of_week: 星期索引，1 表示周一。
-        :type day_of_week: int
-        :param sections: 需要查询的节次列表。
-        :type sections: list[int]
-        :param time: 教务接口的时间戳参数，默认 0。
-        :type time: int
-        """
-
+        time: int = 0,
+    ) -> None:
         super().__init__()
         self.year = year
         self.term = term
@@ -69,36 +61,29 @@ class ClassroomQueryData(dict):
             result |= 1 << (i - 1)
         return result
 
-    def __repr__(self):
-        """
-        构建教务系统教室空闲查询所需的 URL 查询字符串。
-
-        :return: 按 EMS 接口要求拼接的查询参数字符串。
-        :rtype: str
-        """
-
+    def __repr__(self) -> str:  # pragma: no cover - string formatting helper
         import time
 
         return (
-            f"xqh_id=02"
+            "xqh_id=02"
             f"&xnm={self.year}"
             f"&xqm={3 if self.term == 1 else 12}"
-            f"&cdlb_id=01"
-            f"&jyfs=0"
+            "&cdlb_id=01"
+            "&jyfs=0"
             f"&zcd={self._bits_of_list(self.weeks)}"
             f"&xqj={self.day_of_week}"
             f"&jcd={self._bits_of_list(self.sections)}"
-            f"&_search=false"
-            f"&nd={int(time.time() * 1000)}"  # 当前时间戳，防止缓存
-            f"&queryModel.showCount=99999"
-            f"&queryModel.currentPage=1"
-            f"&queryModel.sortName=cdbh+"
-            f"&queryModel.sortOrder=asc"
+            "&_search=false"
+            f"&nd={int(time.time() * 1000)}"
+            "&queryModel.showCount=99999"
+            "&queryModel.currentPage=1"
+            "&queryModel.sortName=cdbh+"
+            "&queryModel.sortOrder=asc"
             f"&time={self.time}"
         )
 
 
-def ems_get_classsroom_avaliability(
+def ems_get_classroom_availability(
     cookie_jar: cookies.RequestsCookieJar, query_data: ClassroomQueryData
 ) -> list[str]:
     """
@@ -117,7 +102,6 @@ def ems_get_classsroom_avaliability(
         "Host": "jw.xtu.edu.cn",
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    # print(query.__dict__)
     classroom_status_url = (
         "https://jw.xtu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155"
     )
@@ -129,18 +113,15 @@ def ems_get_classsroom_avaliability(
         )
         if response.status_code != 200:
             raise Exception(
-                f"Failed to retrieve classroom availability information, status code: {response.status_code}"
+                "Failed to retrieve classroom availability information, "
+                f"status code: {response.status_code}"
             )
-        # 从返回的 JSON 中提取教室使用情况数据
         data = response.json()
         return [item["cdmc"] for item in data["items"]]
 
 
-if __name__ == "__main__":
-    import argparse
-    from tokenizer import deserialize_token
-
-    parser = argparse.ArgumentParser(description="EMS SSO Authentication Script")
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="EMS Classroom Availability Script")
     parser.add_argument(
         "--token",
         type=str,
@@ -184,23 +165,30 @@ if __name__ == "__main__":
         required=True,
         help="List of class sections to query, e.g., 1 2 3",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     input_token = args.token
     compressed = args.compressed
-    year = args.year
-    term = args.term
-    weeks = args.weeks
-    day_of_week = args.day_of_week
-    sections = args.sections
     input_cookies = deserialize_token(input_token, compressed=compressed)
     query_data = ClassroomQueryData(
-        year=year,
-        term=term,
-        weeks=weeks,
-        day_of_week=day_of_week,
-        sections=sections,
+        year=args.year,
+        term=args.term,
+        weeks=args.weeks,
+        day_of_week=args.day_of_week,
+        sections=args.sections,
     )
-    available_classrooms = ems_get_classsroom_avaliability(input_cookies, query_data)
+    available_classrooms = ems_get_classroom_availability(input_cookies, query_data)
     import json
 
     print(json.dumps(available_classrooms, ensure_ascii=False, indent=4))
+
+
+ems_get_classsroom_avaliability = ems_get_classroom_availability  # backward compat
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

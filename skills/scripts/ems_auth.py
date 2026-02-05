@@ -1,4 +1,14 @@
+from __future__ import annotations
+
+import argparse
+from typing import Iterable
+
 from requests import Session, cookies
+
+try:
+    from .tokenizer import deserialize_token, serialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token, serialize_token
 
 def ems_auth_with_sso(cookie_jar: cookies.RequestsCookieJar) -> cookies.RequestsCookieJar:
     """
@@ -22,10 +32,7 @@ def ems_auth_with_sso(cookie_jar: cookies.RequestsCookieJar) -> cookies.Requests
         return session.cookies
 
 
-if __name__ == "__main__":
-    import argparse
-    from tokenizer import deserialize_token, serialize_token
-
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EMS SSO Authentication Script")
     parser.add_argument(
         "--token",
@@ -38,7 +45,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether the input token is compressed",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     input_token = args.token
     compressed = args.compressed
 
@@ -46,3 +58,7 @@ if __name__ == "__main__":
     ems_cookies = ems_auth_with_sso(input_cookies)
     output_token = serialize_token(ems_cookies, compressed=compressed)
     print(output_token)
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

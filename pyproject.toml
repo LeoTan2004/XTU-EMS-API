@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xtu-ems-api"
+version = "0.1.0"
+description = "XTU EMS API client and CLI utilities"
+readme = "README.md"
+authors = [
+  { name = "LeoTan2004" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "requests>=2.28",
+  "beautifulsoup4>=4.12",
+  "pdfplumber>=0.11",
+]
+keywords = ["xtu", "ems", "education", "cli", "api"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Education",
+  "Topic :: Education",
+  "Topic :: Internet :: WWW/HTTP",
+]
+
+[project.scripts]
+xtu-sso-login = "xtu_ems_api.sso_login:main"
+xtu-ems-auth = "xtu_ems_api.ems_auth:main"
+xtu-course-schedule = "xtu_ems_api.course_schedule:main"
+xtu-classroom-availability = "xtu_ems_api.classroom_availability:main"
+xtu-exam-schedule = "xtu_ems_api.exam_schedule:main"
+xtu-student-info = "xtu_ems_api.student_info:main"
+xtu-teaching-calendar = "xtu_ems_api.teaching_calendar:main"
+xtu-transcript = "xtu_ems_api.transcript:main"
+
+[tool.setuptools.packages.find]
+where = ["skills/scripts"]
+
+[tool.setuptools.package-dir]
+"" = "skills/scripts"

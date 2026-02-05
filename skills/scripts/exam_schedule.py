@@ -1,10 +1,19 @@
-from requests import Session, cookies
-import time
-from datetime import datetime, date
+from __future__ import annotations
+
 import argparse
-from tokenizer import deserialize_token
 import json
-def parse_exams_list(exams_list) -> list:
+import time
+from datetime import date, datetime
+from typing import Iterable
+
+from requests import Session, cookies
+
+try:
+    from .tokenizer import deserialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token
+
+def parse_exams_list(exams_list: list[dict] | None) -> list[dict]:
     """
     将 EMS 返回的考试安排列表解析为结构化的考试信息字典列表。
 
@@ -13,10 +22,10 @@ def parse_exams_list(exams_list) -> list:
     :return: 每场考试的结构化信息，包括名称、时间、地点和类型。
     :rtype: list
     """
-    exams = []
-    for exam in exams_list:
+    exams: list[dict] = []
+    for exam in exams_list or []:
         exam_name = exam.get("kcmc", "").strip()
-        exam_time = exam.get("kssj", "").strip()  # "2026-01-10(10:30-12:30)"
+        exam_time = exam.get("kssj", "").strip()
         if "(" in exam_time and ")" in exam_time:
             start_str = exam_time.split("(")[0]
             time_range = exam_time.split("(")[1].split(")")[0]
@@ -29,14 +38,17 @@ def parse_exams_list(exams_list) -> list:
 
         location = exam.get("cdmc", "").strip()
         exam_type = exam.get("khfs", "考试").strip()
-        exams.append({
-            "name": exam_name,
-            "start_time": start_time,
-            "end_time": end_time,
-            "location": location,
-            "type": exam_type
-        })
+        exams.append(
+            {
+                "name": exam_name,
+                "start_time": start_time,
+                "end_time": end_time,
+                "location": location,
+                "type": exam_type,
+            }
+        )
     return exams
+
 
 def get_term_year(d: date) -> int:
     """
@@ -47,12 +59,7 @@ def get_term_year(d: date) -> int:
     :return: 学年起始年份整数，例 2023 表示 2023-2024 学年。
     :rtype: int
     """
-    year = d.year
-    month = d.month
-    if month < 8:
-        return year - 1
-    else:
-        return year
+    return d.year - 1 if d.month < 8 else d.year
 
 
 def get_term_id(d: date) -> int:
@@ -67,7 +74,10 @@ def get_term_id(d: date) -> int:
     month = d.month
     return 2 if 2 <= month <= 7 else 1
 
-def ems_get_exam_schedule(cookie_jar: cookies.RequestsCookieJar, year=None, term=None) -> list:
+
+def ems_get_exam_schedule(
+    cookie_jar: cookies.RequestsCookieJar, year: int | None = None, term: int | None = None
+) -> list[dict]:
     """
     使用 EMS 系统的用户凭证查询指定学年学期的考试安排信息。
 
@@ -81,14 +91,11 @@ def ems_get_exam_schedule(cookie_jar: cookies.RequestsCookieJar, year=None, term
     :rtype: list
     """
     exams_url = "https://jw.xtu.edu.cn/jwglxt/kwgl/kscx_cxXsksxxIndex.html?doType=query&gnmkdm=N358105"
-    date = datetime.now().date()
-    if year is None or term is None:
-        year = get_term_year(date)
-        term = get_term_id(date)
-    current_date = datetime.now().date()
-    if year is None or term is None:
-        year = get_term_year(current_date)
-        term = get_term_id(current_date)
+    reference_date = datetime.now().date()
+    if year is None:
+        year = get_term_year(reference_date)
+    if term is None:
+        term = get_term_id(reference_date)
     payload = (
         f"xnm={year}"
         f"&xqm={term}"
@@ -115,8 +122,8 @@ def ems_get_exam_schedule(cookie_jar: cookies.RequestsCookieJar, year=None, term
         exams_list = resp_json.get("items", [])
         return parse_exams_list(exams_list)
 
-if __name__ == "__main__":
 
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EMS Exam Schedule Script")
     parser.add_argument(
         "--token",
@@ -141,10 +148,19 @@ if __name__ == "__main__":
         required=False,
         help="Term number, e.g., 1 for the first term, 2 for the second term, defaults to current term",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     input_token = args.token
     compressed = args.compressed
 
     input_cookies = deserialize_token(input_token, compressed=compressed)
     exams = ems_get_exam_schedule(input_cookies, year=args.year, term=args.term)
     print(json.dumps(exams, ensure_ascii=False, indent=4))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

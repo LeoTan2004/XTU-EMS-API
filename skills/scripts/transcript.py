@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import argparse
 import json
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from requests import Session, cookies
 
-from tokenizer import deserialize_token
-
+try:
+    from .tokenizer import deserialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token
 
 def with_default(value: Any, default: str) -> str:
     """Return the stripped string value or a fallback when empty."""
@@ -17,16 +21,7 @@ def with_default(value: Any, default: str) -> str:
 
 
 def _safe_cell(row: List[Any], index: int, default: str = "") -> str:
-    """Safely read a cell from a table row.
-    :param row: A list representing a table row.
-    :type row: List[Any]
-    :param index: The index of the cell to read.
-    :type index: int
-    :param default: The default value to return if the cell is not found or empty.
-    :type default: str
-    :return: The cell value as a string, or the default if not found or empty.
-    :rtype: str
-    """
+    """Safely read a cell from a table row."""
     if row is None or index >= len(row):
         return default
     return with_default(row[index], default)
@@ -35,40 +30,26 @@ def _safe_cell(row: List[Any], index: int, default: str = "") -> str:
 def extract_segment(source: str, start: str, end: Optional[str] = None) -> str:
     """
     Extract a substring from source between start and end markers.
-    :param source: The original string to extract from.
-    :type source: str
-    :param start: The starting marker string.
-    :type start: str
-    :param end: The ending marker string (optional).
-    :type end: Optional[str]
-    :return: The extracted substring, or empty string if not found.
-    :rtype: str
     """
     if not source or not start:
         return ""
-    else:
-        if start not in source:
-            return ""
-        segment = source.split(start, 1)[1]
-        if end and end in segment:
-            segment = segment.split(end, 1)[0]
-        return segment.strip()
+    if start not in source:
+        return ""
+    segment = source.split(start, 1)[1]
+    if end and end in segment:
+        segment = segment.split(end, 1)[0]
+    return segment.strip()
 
 
 def parse_transcript_scores(table: List[List[Any]]) -> List[Dict[str, Any]]:
     """
     解析成绩单表格中的课程成绩信息。
-    :param table: 成绩单表格数据，包含表头和多行课程记录。
-    :type table: List[List[Any]]
-    :return: 课程成绩信息列表，每个元素为包含课程名称、类型、
-                学分、成绩和学期的字典。
-    :rtype: List[Dict[str, Any]]
     """
 
     header = table[0]
     group_size = 7 if header else 0
     term = 0
-    score_list = []
+    score_list: List[Dict[str, Any]] = []
     for col in range(len(header) // group_size if group_size else 0):
         name_idx = type_idx = credit_idx = score_idx = None
         for idx in range(col * group_size, (col + 1) * group_size):
@@ -111,6 +92,10 @@ def parse_transcript_scores(table: List[List[Any]]) -> List[Dict[str, Any]]:
                 {
                     "name": name_text,
                     "type": course_type,
+                }
+            )
+            score_list[-1].update(
+                {
                     "credit": with_default(row[credit_idx], "0"),
                     "score": with_default(row[score_idx], ""),
                     "term": term,
@@ -122,11 +107,6 @@ def parse_transcript_scores(table: List[List[Any]]) -> List[Dict[str, Any]]:
 def parse_transcript_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
     """
     解析成绩单 PDF 二进制内容并提取院系信息、课程成绩等结构化数据。
-
-    :param pdf_bytes: 成绩单 PDF 文件的二进制数据。
-    :type pdf_bytes: bytes
-    :return: 包含院系、专业、学号、姓名及课程成绩列表等信息的字典。
-    :rtype: Dict[str, Any]
     """
 
     import pdfplumber
@@ -182,10 +162,6 @@ def parse_transcript_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
 def ems_download_transcript(cookie_jar: cookies.RequestsCookieJar) -> Dict[str, Any]:
     """
     使用 EMS 系统的用户凭证下载并解析成绩单 PDF，返回结构化的成绩单数据。
-    :param cookie_jar: 已登录 EMS 教务系统的会话 Cookie 集合，用于进行认证请求。
-    :type cookie_jar: cookies.RequestsCookieJar
-    :return: 解析后的成绩单数据字典。
-    :rtype: Dict[str, Any]
     """
     list_payload = (
         "gsdygx=10530-zw-qcmrgs"
@@ -229,7 +205,7 @@ def ems_download_transcript(cookie_jar: cookies.RequestsCookieJar) -> Dict[str, 
     return parse_transcript_pdf(pdf_response.content)
 
 
-if __name__ == "__main__":
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EMS Transcript Script")
     parser.add_argument(
         "--token",
@@ -242,8 +218,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether the input token is compressed",
     )
-    args = parser.parse_args()
+    return parser
 
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     ems_cookies = deserialize_token(args.token, compressed=args.compressed)
     transcript = ems_download_transcript(ems_cookies)
     print(json.dumps(transcript, ensure_ascii=False, indent=4))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

@@ -1,11 +1,18 @@
-from requests import Session, cookies
-from datetime import datetime, date
+from __future__ import annotations
+
 import argparse
 import json
-from tokenizer import deserialize_token
+from datetime import date, datetime
+from typing import Iterable
 
+from requests import Session, cookies
 
-def parse_weeks(weeks_str: str) -> list:
+try:
+    from .tokenizer import deserialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token
+
+def parse_weeks(weeks_str: str) -> list[int]:
     """
     将 EMS 返回的周次字符串解析为按升序排列的周次整数列表。
 
@@ -18,7 +25,7 @@ def parse_weeks(weeks_str: str) -> list:
         return []
     normalized = weeks_str.replace("周", "").replace("，", ",")
     parts = [part.strip() for part in normalized.split(",") if part.strip()]
-    weeks = []
+    weeks: list[int] = []
     for part in parts:
         range_part = part
         filter_type = None
@@ -50,7 +57,7 @@ def parse_weeks(weeks_str: str) -> list:
     return sorted(set(weeks))
 
 
-def parse_sections(section_str: str) -> list:
+def parse_sections(section_str: str) -> list[int]:
     """
     将课节描述字符串转换为节次整数列表，支持单节或区间格式。
 
@@ -82,7 +89,7 @@ def parse_sections(section_str: str) -> list:
     return list(range(start, end + 1))
 
 
-def parse_courses_list(courses_list) -> list:
+def parse_courses_list(courses_list: list[dict] | None) -> list[dict]:
     """
     将 EMS 接口返回的课程列表转为结构化且字段规范的课程字典列表。
 
@@ -91,7 +98,7 @@ def parse_courses_list(courses_list) -> list:
     :return: 每门课程的结构化信息列表，包含课程名称、教师、场地等字段。
     :rtype: list
     """
-    courses = []
+    courses: list[dict] = []
     for course in courses_list or []:
         name = course.get("kcmc", "").strip()
         teacher = course.get("xm", "").strip()
@@ -160,26 +167,17 @@ def ems_get_course_schedule(
     cookie_jar: cookies.RequestsCookieJar,
     year: int | None = None,
     term: int | None = None,
-) -> list:
-    
+) -> list[dict]:
     """
     使用 EMS 系统的用户凭证获取课表信息。
 
     :param cookie_jar: 已登录 EMS 教务系统的会话 Cookie 集合，用于进行认证请求。
     :type cookie_jar: cookies.RequestsCookieJar
     :param year: 学年起始年份。例如 2025 表示 2025-2026 学年。
-        - 为 None 时，将根据当前日期自动推断所属学年的起始年份（见 get_term_year）。
-        - 非 None 时，将直接作为请求参数 xnm 发送给教务系统。
     :type year: int | None
-    :param term: 学期编号，可以是“逻辑学期号”或“EMS 编码”：
-        - 1 表示第一学期（自动转换为 EMS 编码 3）
-        - 2 表示第二学期（自动转换为 EMS 编码 12）
-        - 3 或 12 可直接传递 EMS 编码
-        - None 时自动推断当前学期（见 get_term_id）
+    :param term: 学期编号，可以是“逻辑学期号”或“EMS 编码”。
     :type term: int | None
-    :return: 由 parse_courses_list 解析后的课程记录列表。通常为若干字典组成的列表，
-        每个元素对应一门课程或一条课表记录，包含课程名称、时间、周次、节次等
-        从 EMS 接口返回的 kbList 字段中提取并规范化后的信息。
+    :return: 解析后的课程记录列表。
     :rtype: list
     """
     courses_url = (
@@ -206,7 +204,7 @@ def ems_get_course_schedule(
         return parse_courses_list(courses_list)
 
 
-if __name__ == "__main__":
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EMS Course Schedule Script")
     parser.add_argument(
         "--token",
@@ -236,10 +234,18 @@ if __name__ == "__main__":
             "Term number, accepts either 1/2 or ERP codes 3/12; defaults to current term"
         ),
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     input_token = args.token
     compressed = args.compressed
-
     input_cookies = deserialize_token(input_token, compressed=compressed)
     courses = ems_get_course_schedule(input_cookies, year=args.year, term=args.term)
     print(json.dumps(courses, ensure_ascii=False, indent=4))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()

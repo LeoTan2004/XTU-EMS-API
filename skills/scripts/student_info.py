@@ -1,7 +1,17 @@
+from __future__ import annotations
+
+import argparse
+import json
+from typing import Iterable
+
 from requests import Session, cookies
 
+try:
+    from .tokenizer import deserialize_token
+except ImportError:  # pragma: no cover
+    from tokenizer import deserialize_token
 
-def parse_student_info(html: str) -> dict:
+def parse_student_info(html: str) -> dict[str, str]:
     """
     解析 EMS 学生信息页面的 HTML 内容并提取结构化的学生信息字段。
 
@@ -13,7 +23,7 @@ def parse_student_info(html: str) -> dict:
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "html.parser")
-    info = {}
+    info: dict[str, str] = {}
 
     def _safe_get_text(panel, element_id: str) -> str:
         """
@@ -36,13 +46,11 @@ def parse_student_info(html: str) -> dict:
     basic_info_panel = soup.find(id="content_xsxxgl_xsjbxx")
     if basic_info_panel is None:
         return info
-    # 基本信息面板
     info["student_id"] = _safe_get_text(basic_info_panel, "col_xh")
     info["name"] = _safe_get_text(basic_info_panel, "col_xm")
     info["gender"] = _safe_get_text(basic_info_panel, "col_xbm")
     info["birthday"] = _safe_get_text(basic_info_panel, "col_csrq")
     info["entrance_day"] = _safe_get_text(basic_info_panel, "col_rxrq")
-    # 学籍信息面板
     student_info_panel = soup.find(id="content_xsxxgl_xsxjxx")
     if student_info_panel is None:
         return info
@@ -52,7 +60,7 @@ def parse_student_info(html: str) -> dict:
     return info
 
 
-def ems_get_info(cookie_jar: cookies.RequestsCookieJar) -> dict:
+def ems_get_info(cookie_jar: cookies.RequestsCookieJar) -> dict[str, str]:
     """
     使用 EMS 系统的用户凭证检索学生个人信息页面并解析核心字段。
 
@@ -67,19 +75,13 @@ def ems_get_info(cookie_jar: cookies.RequestsCookieJar) -> dict:
     with Session() as session:
         session.cookies = cookie_jar
         response = session.get(info_url, allow_redirects=False)
-        # When allow_redirects=False, a 3xx status usually indicates an authentication
-        # problem (e.g., redirect to login page) or an unexpected redirect target.
         response.raise_for_status()
     html = response.text
-    info = parse_student_info(html)
-    return info
+    return parse_student_info(html)
 
 
-if __name__ == "__main__":
-    import argparse
-    from tokenizer import deserialize_token
-
-    parser = argparse.ArgumentParser(description="EMS SSO Authentication Script")
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="EMS Student Info Script")
     parser.add_argument(
         "--token",
         type=str,
@@ -91,11 +93,19 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether the input token is compressed",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     input_token = args.token
     compressed = args.compressed
 
     input_cookies = deserialize_token(input_token, compressed=compressed)
     student_info = ems_get_info(input_cookies)
-    import json
     print(json.dumps(student_info, ensure_ascii=False, indent=4))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI passthrough
+    main()
