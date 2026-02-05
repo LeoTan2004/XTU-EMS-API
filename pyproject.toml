@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xtu-ems-api"
-version = "0.1.0"
+version = "1.0.0"
 description = "XTU EMS API client and CLI utilities"
 readme = "README.md"
 authors = [
-  { name = "LeoTan2004" }
+  { name = "LeoTan2004", email = "3509836544@qq.com"}
 ]
 license = { text = "MIT" }
 requires-python = ">=3.10"
