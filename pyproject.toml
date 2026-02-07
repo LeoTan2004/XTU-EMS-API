@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xtu-ems-api"
-version = "1.0.0"
+version = "1.1.0"
 description = "XTU EMS API client and CLI utilities"
 readme = "README.md"
 authors = [
