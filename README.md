@@ -37,6 +37,7 @@ pip install xtu-ems-api
 | `xtu-student-info` | 查看个人信息档案 | `--token`
 | `xtu-teaching-calendar` | 拉取教学日历 | `--token`
 | `xtu-transcript` | 解析成绩（依赖 `pdfplumber`） | `--token`
+| `xtu-gpa` | 计算 GPA（新功能） | `--token` `--start-year` `--end-year` `--start-term` `--end-term` `--filter`
 
 示例：
 
