@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xtu-ems-api"
-version = "1.1.0"
+version = "1.1.1"
 description = "XTU EMS API client and CLI utilities"
 readme = "README.md"
 authors = [
@@ -27,6 +27,10 @@ classifiers = [
   "Topic :: Internet :: WWW/HTTP",
 ]
 
+[project.urls]
+Homepage = "https://github.com/LeoTan2004/XTU-EMS-API"
+Issues = "https://github.com/LeoTan2004/XTU-EMS-API/issues"
+
 [project.scripts]
 xtu-sso-login = "xtu_ems_api.sso_login:main"
 xtu-ems-auth = "xtu_ems_api.ems_auth:main"
@@ -38,8 +42,8 @@ xtu-teaching-calendar = "xtu_ems_api.teaching_calendar:main"
 xtu-transcript = "xtu_ems_api.transcript:main"
 xtu-gpa = "xtu_ems_api.gpa:main"
 
-[tool.setuptools.packages.find]
-where = ["skills/scripts"]
+[tool.setuptools]
+packages = ["xtu_ems_api"]
 
 [tool.setuptools.package-dir]
-"" = "skills/scripts"
+xtu_ems_api = "skills/scripts"
